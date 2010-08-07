@@ -233,11 +233,11 @@ aaf_out:
 
 static struct delayed_work avs_work;
 static struct workqueue_struct  *kavs_wq;
-#define AVS_DELAY ((CONFIG_HZ * 50 + 999) / 1000)
 
 static void do_avs_timer(struct work_struct *work)
 {
 	int cur_freq_idx;
+	int delay = msecs_to_jiffies(50);
 
 	mutex_lock(&avs_lock);
 	if (!avs_state.changing) {
@@ -246,19 +246,21 @@ static void do_avs_timer(struct work_struct *work)
 		avs_set_target_voltage(cur_freq_idx, 1);
 	}
 	mutex_unlock(&avs_lock);
-	queue_delayed_work_on(0, kavs_wq, &avs_work, AVS_DELAY);
+	queue_delayed_work_on(0, kavs_wq, &avs_work, delay);
 }
 
 
 static void __init avs_timer_init(void)
 {
+	int delay = msecs_to_jiffies(50);
+
 	INIT_DELAYED_WORK_DEFERRABLE(&avs_work, do_avs_timer);
-	queue_delayed_work_on(0, kavs_wq, &avs_work, AVS_DELAY);
+	queue_delayed_work_on(0, kavs_wq, &avs_work, delay);
 }
 
 static void __exit avs_timer_exit(void)
 {
-	cancel_delayed_work(&avs_work);
+	cancel_delayed_work_sync(&avs_work);
 }
 
 static int __init avs_work_init(void)
