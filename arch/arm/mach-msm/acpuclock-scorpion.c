@@ -160,6 +160,7 @@ struct clock_state {
 	unsigned long			power_collapse_khz;
 	unsigned long			wait_for_irq_khz;
 	struct clk*			clk_ebi1;
+	struct regulator		*regulator;
 	int (*acpu_set_vdd) (int mvolts);
 };
 
@@ -277,6 +278,23 @@ static void select_clock(unsigned src, unsigned config)
 	/* switch to new source */
 	val = readl(SPSS_CLK_SEL_ADDR) & (~6);
 	writel(val | ((src & 3) << 1), SPSS_CLK_SEL_ADDR);
+}
+
+static int acpu_set_vdd(int vdd)
+{
+	if (!drv_state.regulator || IS_ERR(drv_state.regulator)) {
+		drv_state.regulator = regulator_get(NULL, "acpu_vcore");
+		if (IS_ERR(drv_state.regulator)) {
+			pr_info("acpuclk_set_vdd_level %d no regulator\n", vdd);
+			/* Assume that the PMIC supports scaling the processor
+			 * to its maximum frequency at its default voltage.
+			 */
+			return 0;
+		}
+		pr_info("acpuclk_set_vdd_level got regulator\n");
+	}
+	vdd *= 1000; /* mV -> uV */
+	return regulator_set_voltage(drv_state.regulator, vdd, vdd);
 }
 
 static int acpuclk_set_vdd_level(int vdd)
@@ -534,7 +552,7 @@ void __init msm_acpu_clock_init(struct msm_acpu_clock_platform_data *clkdata)
 	drv_state.vdd_switch_time_us = clkdata->vdd_switch_time_us;
 	drv_state.power_collapse_khz = clkdata->power_collapse_khz;
 	drv_state.wait_for_irq_khz = clkdata->wait_for_irq_khz;
-	drv_state.acpu_set_vdd = clkdata->acpu_set_vdd;
+	drv_state.acpu_set_vdd = acpu_set_vdd;
 
 	if (clkdata->mpll_khz)
 		acpu_mpll->acpu_khz = clkdata->mpll_khz;
