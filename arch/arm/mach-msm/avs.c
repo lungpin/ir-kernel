@@ -56,27 +56,27 @@ struct clkctl_acpu_speed {
 };
 
 struct clkctl_acpu_speed acpu_max_vdd_tbl[] = {
-	{  19200, 925 },
-	{ 128000, 925 },
-	{ 245000, 925 },
-	{ 256000, 925 },
-	{ 384000, 950 },
-	{ 422400, 975 },
-	{ 460800, 1000 },
-	{ 499200, 1025 },
+	{  19200, 950 },
+	{ 128000, 950 },
+	{ 245000, 950 },
+	{ 256000, 950 },
+	{ 384000, 975 },
+	{ 422400, 1000 },
+	{ 460800, 1025 },
+	{ 499200, 1050 },
 	{ 537600, 1050 },
-	{ 576000, 1050 },
-	{ 614400, 1075 },
-	{ 652800, 1100 },
-	{ 691200, 1125 },
-	{ 729600, 1150 },
-	{ 768000, 1150 },
-	{ 806400, 1175 },
-	{ 844800, 1200 },
-	{ 883200, 1200 },
-	{ 921600, 1225 },
-	{ 960000, 1225 },
-	{ 998400, 1225 },
+	{ 576000, 1075 },
+	{ 614400, 1100 },
+	{ 652800, 1125 },
+	{ 691200, 1150 },
+	{ 729600, 1175 },
+	{ 768000, 1200 },
+	{ 806400, 1225 },
+	{ 844800, 1225 },
+	{ 883200, 1250 },
+	{ 921600, 1275 },
+	{ 960000, 1275 },
+	{ 998400, 1275 },
 	{ 0 },
 };
 
@@ -165,12 +165,12 @@ static short avs_get_target_voltage(int freq_idx, bool update_table)
 
 	//return vdd_table[freq_idx];
 	voltage = vdd_table[freq_idx];
-	
+
 	if (voltage > acpu_max_vdd_tbl[freq_idx].vdd)
 	{
 		voltage = acpu_max_vdd_tbl[freq_idx].vdd;
 	}
-	
+
 	return voltage;
 }
 
@@ -181,8 +181,14 @@ static short avs_get_target_voltage(int freq_idx, bool update_table)
  */
 static int avs_set_target_voltage(int freq_idx, bool update_table)
 {
-	int rc = 0;
-	int new_voltage = avs_get_target_voltage(freq_idx, update_table);
+	int rc = 0, new_voltage;
+
+	if(freq_idx < 0 || freq_idx >= avs_state.freq_cnt){
+		AVSDEBUG("Out of range :%d\n", freq_idx);
+		return -EINVAL;
+	}
+
+	new_voltage = avs_get_target_voltage(freq_idx, update_table);
 	if (avs_state.vdd != new_voltage) {
 		/*AVSDEBUG*/pr_info("AVS setting V to %d mV @%d MHz\n",
 			new_voltage, acpu_max_vdd_tbl[freq_idx].acpu_khz / 1000);
@@ -206,7 +212,7 @@ int avs_adjust_freq(u32 freq_idx, int begin)
 		return 0;
 	}
 
-	if (freq_idx >= avs_state.freq_cnt) {
+	if (freq_idx < 0 || freq_idx >= avs_state.freq_cnt) {
 		AVSDEBUG("Out of range :%d\n", freq_idx);
 		return -EINVAL;
 	}
