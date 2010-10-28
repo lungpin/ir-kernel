@@ -438,7 +438,7 @@ static struct regulator_init_data tps65023_data[5] = {
 	{
 		.constraints = {
 			.name = "dcdc1", /* VREG_MSMC2_1V29 */
-			.min_uV = 975000,
+			.min_uV = 950000,
 #ifdef CONFIG_JESUS_PHONE
 			.max_uV = 1350000,
 #else
