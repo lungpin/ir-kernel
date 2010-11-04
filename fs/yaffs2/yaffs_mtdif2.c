@@ -1,1 +1,1 @@
-/mnt/Source/nexuskernel/yaffs2/yaffs_mtdif2.c
+/mnt/Source/nexuskernel/yaffs2/yaffs_mtdif2_multi.c
