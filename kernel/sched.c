@@ -272,6 +272,10 @@ struct task_group {
 	struct task_group *parent;
 	struct list_head siblings;
 	struct list_head children;
+
+#if (defined(CONFIG_SCHED_AUTOGROUP))
+	struct autogroup *autogroup;
+#endif
 };
 
 #define root_task_group init_task_group
