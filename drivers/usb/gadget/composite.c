@@ -947,7 +947,8 @@ unknown:
 			if (cdev->config == NULL)
 				return value;
 
-			f = cdev->config->interface[intf];
+			if (cdev->config)
+				f = cdev->config->interface[intf];
 			break;
 
 		case USB_RECIP_ENDPOINT:
